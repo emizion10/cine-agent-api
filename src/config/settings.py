@@ -21,6 +21,23 @@ class Settings(BaseSettings):
     TMDB_API_KEY: str = os.getenv("TMDB_API_KEY")
     TMDB_API_BASE_URL: str = os.getenv("TMDB_API_BASE_URL", "https://api.themoviedb.org/3")
     
+    # Database Settings
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
+    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "cine_agent")
+    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
+    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
+    
+    @property
+    def SQLALCHEMY_DATABASE_URL(self) -> str:
+        """Get database URL."""
+        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    
+    # Security Settings
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
     # CORS Settings
     BACKEND_CORS_ORIGINS: list[str] = ["*"]
     

@@ -9,8 +9,8 @@ A FastAPI-based backend application for movie search and personalized suggestion
 - Popular movies listing
 - Movie recommendations
 - Genre listing
-- (Planned) User authentication
-- (Planned) User favorites management
+- User authentication
+- User favorites management
 
 ## Project Structure
 
@@ -20,17 +20,32 @@ cine-agent-api/
 │   ├── api/
 │   │   └── v1/
 │   │       ├── endpoints/
-│   │       │   └── movies.py
+│   │       │   ├── movies.py
+│   │       │   └── auth.py
 │   │       └── api.py
 │   ├── config/
 │   │   └── settings.py
 │   ├── core/
+│   │   └── security.py
+│   ├── crud/
+│   │   └── user.py
+│   ├── db/
+│   │   ├── base_class.py
+│   │   └── session.py
 │   ├── models/
+│   │   └── user.py
+│   ├── schemas/
+│   │   └── user.py
 │   ├── services/
 │   │   └── tmdb_service.py
 │   └── main.py
+├── alembic/
+│   ├── versions/
+│   │   └── initial_migration.py
+│   └── env.py
 ├── .env
 ├── .gitignore
+├── docker-compose.yml
 ├── README.md
 └── requirements.txt
 ```
@@ -38,6 +53,7 @@ cine-agent-api/
 ## Prerequisites
 
 - Python 3.8+
+- Docker and Docker Compose
 - TMDB API key (Get it from https://www.themoviedb.org/settings/api)
 
 ## Setup
@@ -66,9 +82,32 @@ TMDB_API_BASE_URL=https://api.themoviedb.org/3
 SECRET_KEY=your_secret_key_here
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Database Configuration
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=cine_agent
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
 ```
 
-5. Run the application:
+5. Start the PostgreSQL database using Docker Compose:
+```bash
+docker-compose up -d
+```
+
+6. Run database migrations:
+```bash
+# Set PYTHONPATH to include the project root directory
+export PYTHONPATH=$PYTHONPATH:$(pwd)  # On Unix/macOS
+# or
+set PYTHONPATH=%PYTHONPATH%;%cd%  # On Windows
+
+# Initialize the database with the first migration
+alembic upgrade head
+```
+
+7. Run the application:
 ```bash
 uvicorn src.main:app --reload
 ```
@@ -90,14 +129,62 @@ Once the application is running, you can access:
 - `GET /api/v1/movies/{movie_id}/recommendations` - Get movie recommendations
 - `GET /api/v1/movies/genres` - Get movie genres
 
-### Authentication (To be implemented)
-- `POST /api/v1/token` - Login endpoint
-- `GET /api/v1/users/me` - Get user profile
+### Authentication
+- `POST /api/v1/auth/signup` - Create a new user account
+- `POST /api/v1/auth/login` - Login and get access token
 
-### User Favorites (To be implemented)
+### User Favorites
 - `GET /api/v1/users/favorites` - Get user favorites
 - `POST /api/v1/users/favorites/{movie_id}` - Add movie to favorites
 - `DELETE /api/v1/users/favorites/{movie_id}` - Remove movie from favorites
+
+## Database Management
+
+### Running Migrations
+
+To create a new migration:
+```bash
+# Make sure PYTHONPATH is set
+export PYTHONPATH=$PYTHONPATH:$(pwd)  # On Unix/macOS
+# or
+set PYTHONPATH=%PYTHONPATH%;%cd%  # On Windows
+
+alembic revision --autogenerate -m "description of changes"
+```
+
+To apply migrations:
+```bash
+# Make sure PYTHONPATH is set
+export PYTHONPATH=$PYTHONPATH:$(pwd)  # On Unix/macOS
+# or
+set PYTHONPATH=%PYTHONPATH%;%cd%  # On Windows
+
+alembic upgrade head
+```
+
+To rollback migrations:
+```bash
+# Make sure PYTHONPATH is set
+export PYTHONPATH=$PYTHONPATH:$(pwd)  # On Unix/macOS
+# or
+set PYTHONPATH=%PYTHONPATH%;%cd%  # On Windows
+
+alembic downgrade -1  # Rollback one migration
+# or
+alembic downgrade base  # Rollback all migrations
+```
+
+### Database Backup and Restore
+
+To backup the database:
+```bash
+docker exec cine_agent_db pg_dump -U postgres cine_agent > backup.sql
+```
+
+To restore from backup:
+```bash
+docker exec -i cine_agent_db psql -U postgres cine_agent < backup.sql
+```
 
 ## Contributing
 
@@ -105,4 +192,4 @@ Once the application is running, you can access:
 2. Create your feature branch
 3. Commit your changes
 4. Push to the branch
-5. Create a new Pull Request 
+5. Create a new Pull Request
