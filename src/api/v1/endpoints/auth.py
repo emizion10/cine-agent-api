@@ -8,7 +8,9 @@ from src.core import security
 from src.config.settings import get_settings
 from src.crud import user as user_crud
 from src.schemas.user import User, UserCreate
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 settings = get_settings()
 
@@ -44,16 +46,19 @@ def login(
     """
     OAuth2 compatible token login, get an access token for future requests.
     """
+    logger.info(f"Login attempt with username: {form_data.username}")
     user = user_crud.authenticate_user(
-        db, email=form_data.username, password=form_data.password
+        db, username=form_data.username, password=form_data.password
     )
     if not user:
+        logger.warning(f"Login failed for username: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    logger.info(f"Login successful for user: {user.username}")
     return {
         "access_token": security.create_access_token(
             user.id, expires_delta=access_token_expires
