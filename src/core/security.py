@@ -9,6 +9,9 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# JWT settings
+ALGORITHM = "HS256"  # Algorithm used for JWT token generation
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     logger.info("Verifying password")
     result = pwd_context.verify(plain_password, hashed_password)
@@ -32,5 +35,5 @@ def create_access_token(data: Union[dict, int], expires_delta: Optional[timedelt
     else:
         expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt 
