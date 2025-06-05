@@ -29,7 +29,7 @@ def add_to_watchlist(
     db_watchlist = Watchlist(
         user_id=user_id,
         movie_id=watchlist_in.movie_id,
-        status=watchlist_in.status
+        status=watchlist_in.status.value
     )
     db.add(db_watchlist)
     db.commit()

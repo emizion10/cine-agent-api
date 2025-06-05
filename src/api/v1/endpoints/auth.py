@@ -64,4 +64,5 @@ def login(
             user.id, expires_delta=access_token_expires
         ),
         "token_type": "bearer",
+        "user": User.model_validate(user),
     } 
